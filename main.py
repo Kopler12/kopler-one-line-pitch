@@ -7,6 +7,7 @@ to let an AI agent build their first app idea on make.fun.
 """
 
 import os
+import re
 
 PITCH = (
     "You've had that app idea for years \u2014 describe it in plain words, "
@@ -14,11 +15,24 @@ PITCH = (
     "love what comes back, you've lost nothing but ten minutes."
 )
 
+MAX_CHARS = 240
+
+
+def validate(text: str) -> str:
+    """Return the pitch if it is one clean sentence within the limit."""
+    text = " ".join(text.split())
+    if not 1 <= len(text) <= MAX_CHARS:
+        raise ValueError(f"pitch is {len(text)} chars, must be 1-{MAX_CHARS}")
+    if text != text.strip() or "  " in text:
+        raise ValueError("pitch has stray whitespace")
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", text) if s]
+    if len(sentences) != 1:
+        raise ValueError(f"pitch must be one sentence, found {len(sentences)}")
+    return text
+
 
 def main() -> None:
-    text = PITCH.strip()
-    assert 1 <= len(text) <= 240, f"pitch is {len(text)} chars, must be 1-240"
-    assert text and not text.isspace()
+    text = validate(PITCH)
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8") as f:
         f.write(text + "\n")
